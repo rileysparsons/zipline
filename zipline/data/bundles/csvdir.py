@@ -131,7 +131,7 @@ def csvdir_bundle(environ,
                                               'declared_date', 'pay_date']),
                    'splits': DataFrame(columns=['sid', 'ratio',
                                                 'effective_date'])}
-    for tframe in tframes:
+    for i, tframe in enumerate(tframes):
         ddir = os.path.join(csvdir, tframe)
 
         symbols = sorted(item.split('.csv')[0]
@@ -155,17 +155,19 @@ def csvdir_bundle(environ,
                      divs_splits, show_progress),
                      show_progress=show_progress)
 
-        # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
-        # register "CSVDIR" to resolve to the NYSE calendar, because these
-        # are all equities and thus can use the NYSE calendar.
-        metadata['exchange'] = "CSVDIR"
+        if i == 0:
+            # Hardcode the exchange to "CSVDIR" for all assets and (elsewhere)
+            # register "CSVDIR" to resolve to the NYSE calendar, because these
+            # are all equities and thus can use the NYSE calendar.
+            metadata['exchange'] = "CSVDIR"
 
-        asset_db_writer.write(equities=metadata)
+            asset_db_writer.write(equities=metadata)
 
-        divs_splits['divs']['sid'] = divs_splits['divs']['sid'].astype(int)
-        divs_splits['splits']['sid'] = divs_splits['splits']['sid'].astype(int)
-        adjustment_writer.write(splits=divs_splits['splits'],
-                                dividends=divs_splits['divs'])
+        if tframe == 'daily':
+            divs_splits['divs']['sid'] = divs_splits['divs']['sid'].astype(int)
+            divs_splits['splits']['sid'] = divs_splits['splits']['sid'].astype(int)
+            adjustment_writer.write(splits=divs_splits['splits'],
+                                    dividends=divs_splits['divs'])
 
 
 def _pricing_iter(csvdir, symbols, metadata, divs_splits, show_progress):
